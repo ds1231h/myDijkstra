@@ -18,6 +18,20 @@
 // @version: 2.1
 // @data: 20170409
 
+// addition3
+// @subtitle: 重构2
+// @purpose: 代码重构--按照赋最大值作为relax，并减少了for次数进一步优化
+// @author: MuPei
+// @version: 2.2
+// @data: 20170410
+
+// addition4
+// @subtitle: 重构3
+// @purpose: 完整实现linux和win下程序实现与测时功能
+// @author: MuPei
+// @version: 2.3
+// @data: 20170411
+
 #include <stdio.h>
 #include <iostream>
 #include <memory.h>
@@ -39,69 +53,70 @@ using namespace std;
 
 const int nodeNum = 6;
 const int maxLen = 1000;
-int dist[nodeNum];     // 表示当前点到源点的最短路径长度
-int prevN[nodeNum];     // 记录当前点的前一个结点
 
-void Dijkstra(int nodeNum, int v, int *dist, int *prevN, int c[6][6])
+/*
+function:		实现dijkstra算法，包括从最小队列抽取最小点和松弛操作
+parameter:
+	beginNode	--起始节点id
+	dist[]		--距源节点距离
+	prevN[]		--记录当前节点的前一个节点
+	subDist[][]	--任意两节点间距
+return:			void
+*/
+void Dijkstra(int beginNode, int *dist, int *prevN, int subDist[6][6])
 {
-	bool *sSet = new bool[nodeNum];    // 判断是否已存入该点到S集合中
-	memset(sSet, false, sizeof(sSet));
-
-	for (int i = 1; i <= nodeNum; ++i)
+	int tmp = 0; // 
+	int nextNode = 0;
+	int ss = 0;
+	int tmpLen = 0;
+	int sSet[6]; // 存放已经找到的节点
+	memset(sSet, -1, sizeof(sSet));
+	sSet[0] = beginNode;
+	
+	while (ss != nodeNum-1) // 循环nodeNum-1次即找到了nodeNum-1个节点的最短路径
 	{
-		dist[i] = c[v][i];
-		if (dist[i] == maxLen)
-			prevN[i] = 0;
-		else
-			prevN[i] = v;
-	}
-	dist[v] = 0;
-	sSet[v] = 1;
-
-	// 依次将未放入S集合的结点中，取dist[]最小值的结点，放入结合S中
-	// 一旦S包含了所有V中顶点，dist就记录了从源点到所有其他顶点之间的最短路径长度
-	// 注意是从第二个节点开始，第一个为源点
-	for (int i = 2; i <= nodeNum; ++i)
-	{
-		int tmp = maxLen;
-		int u = v;
-		// 找出当前未使用的点j的dist[j]最小值
-		for (int j = 1; j <= nodeNum; ++j)
-			if ((!sSet[j]) && dist[j]<tmp)
+		tmp = maxLen;
+		// 两重循环遍历已在集合S内的点到其相邻节点的最短距离
+		for (int i = 0; i <= ss; ++i)
+		{
+			for (int j = 1; j < nodeNum; ++j)
 			{
-				u = j;              // u保存当前邻接点中距离最小的点的号码
-				tmp = dist[j];
-			}
-		sSet[u] = 1;    // 表示u点已存入S集合中
-
-						// 更新dist
-		for (int j = 1; j <= nodeNum; ++j)
-			if ((!sSet[j]) && c[u][j]<maxLen)
-			{
-				int newdist = dist[u] + c[u][j];
-				if (newdist < dist[j])
+				tmpLen = dist[sSet[i]] + subDist[sSet[i]][j] < subDist[0][j] ? dist[sSet[i]] + subDist[sSet[i]][j] : subDist[0][j]; // 这个距离是取得全局最优的算法关键，证明见《算法导论》367页
+				if (tmpLen < tmp)
 				{
-					dist[j] = newdist;
-					prevN[j] = u;
+					tmp = tmpLen;
+					nextNode = j;
+					prevN[nextNode] = sSet[i];
 				}
 			}
+		}
+		
+		// 松弛操作：通过赋最大值的方式将当前点去掉
+		for (int k = 0; k < nodeNum; ++k)
+		{
+			subDist[k][nextNode] = maxLen;
+		}
+		ss++;
+		sSet[ss] = nextNode; // 将nextNode包含进集合S
+		// 取得源点到当前点的最小距离
+		dist[nextNode] = tmp;
 	}
 }
 
 /*
-function: 查找从源点vNode到终点uNode的路径，并输出
+function:	查找从源点vNode到终点uNode的路径，并输出
 parameter:
-prevN[n]--记录当前点的前一个节点
-vNode--源节点
-uNode--目的节点
-return: void
+			prevN[n]--记录当前点的前一个节点
+			vNode--源节点
+			uNode--目的节点
+return:		void
 */
 void searchPath(int *prevN, int vNode, int uNode)
 {
 	// 用数组que保存一条路径信息
 	int que[nodeNum];
 	memset(que, 0, sizeof(que));
-	int tot = 1;
+	int tot = 0;
 	que[tot] = uNode;
 	tot++;
 	int tmp = prevN[uNode];
@@ -113,24 +128,34 @@ void searchPath(int *prevN, int vNode, int uNode)
 		tot++;
 	}
 	que[tot] = vNode;
-	for (int i = tot; i >= 1; --i)
-		if (i != 1)
-			cout << que[i] << " -> ";
+	for (int i = tot; i > -1; --i)
+		if (i != 0)
+			cout << que[i]+1 << " -> ";
 		else
-			cout << que[i] << endl;
+			cout << que[i]+1 << endl;
 }
 
+/*
+function:	算法主函数
+parameter:	void
+return:		void
+*/
 void matrixFun(void)
 {
+	int dist[nodeNum];     // 表示当前点到源点的最短路径长度
+	int prevN[nodeNum];     // 记录当前点的前一个结点
 	// 初始化subDist[][]为maxLen
-	int subDist[nodeNum][nodeNum];// 记录图的两点间路径长度
+	int subDist[nodeNum][nodeNum]; // 记录图的两点间路径长度
 	for (int i = 0; i < nodeNum; ++i)
 	{
 		for (int j = 0; j < nodeNum; ++j)
 		{
 			subDist[i][j] = maxLen;
+			dist[j] = maxLen; // 在这里把dist向量赋值		
 		}
 	}
+	dist[0] = 0;
+
 	subDist[0][1] = 8;
 	subDist[0][2] = 3;
 	subDist[0][3] = 2;
@@ -152,28 +177,34 @@ void matrixFun(void)
 	subDist[5][4] = 1;
 
 	for (int i = 0; i < nodeNum; ++i)
-		dist[i] = maxLen;
-	for (int i = 0; i < nodeNum; ++i)
 	{
 		for (int j = 0; j < nodeNum; ++j)
+		{
+			// cout << subDist[i][j];
 			printf("%8d", subDist[i][j]);
-		printf("\n");
+		}
+		cout << endl;
 	}
 
-	Dijkstra(nodeNum, 0, dist, prevN, subDist);
+	Dijkstra(0, dist, prevN, subDist);
 
 	searchPath(prevN, 0, 1);
-	cout << dist[1] << "\n";
+	cout << dist[1] << endl;
 	searchPath(prevN, 0, 2);
-	cout << dist[2] << "\n";
+	cout << dist[2] << endl;
 	searchPath(prevN, 0, 3);
-	cout << dist[3] << "\n";
+	cout << dist[3] << endl;
 	searchPath(prevN, 0, 4);
-	cout << dist[4] << "\n";
-	searchPath(prevN, 0, 4);
-	cout << dist[5] << "\n";
-	cout << endl;
+	cout << dist[4] << endl;
+	searchPath(prevN, 0, 5);
+	cout << dist[5] << endl;
 }
+
+/*
+function:	测程序运行时间，支持win/Linux/Mac/openBSD等平台
+parameter:	void
+return:		void
+*/
 void test_time_start(void)
 {
 #ifdef WINDOWS_IMPL
