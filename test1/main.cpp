@@ -20,7 +20,7 @@
 
 // addition3
 // @subtitle: 重构2
-// @purpose: 代码重构--按照赋最大值作为relax，并减少了for次数进一步优化
+// @purpose: 代码重构--按照赋最大值作为判断是否在集合S内，并减少了for次数进一步优化
 // @author: MuPei
 // @version: 2.2
 // @data: 20170410
@@ -91,7 +91,7 @@ void Dijkstra(int beginNode, int *dist, int *prevN, int subDist[6][6])
 			}
 		}
 		
-		// 松弛操作：通过赋最大值的方式将当前点去掉
+		// 将已在集合S内的点距源点距离改为最大值
 		for (int k = 0; k < nodeNum; ++k)
 		{
 			subDist[k][nextNode] = maxLen;
