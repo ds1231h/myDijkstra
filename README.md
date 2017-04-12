@@ -1,4 +1,4 @@
-dijkstra最短路径算法—WSN作业1
+#dijkstra最短路径算法—WSN作业1
 
 
 **dijkstra算法**在路由选择中颇为常用，现将之以**C语言**实现。
@@ -9,7 +9,7 @@ dijkstra最短路径算法—WSN作业1
 
 程序中含有测时功能
 
-算法效率：linux(AMD A4-4300M APU)下300us, windows7(i7-4710MQ)下3000us。
+算法效率：linux(AMD A4-4300M APU, g++ 5.4.0)下300us, windows7(i7-4710MQ, g++ 5.3.0)下3000us。
 
 
 
