@@ -39,17 +39,18 @@
 // @version: 2.4
 // @data: 20170413
 
+// addition5
+// @subtitle: 重构5
+// @purpose: 优化两种不同算法的函数格式和调用形式
+// @author: MuPei
+// @version: 2.5
+// @data: 20170414
+
 #include <stdio.h>
 #include <iostream>
 #include <memory.h>
-#include<cstdio>
-#include<cstring>
-#include<cstdlib>
-#include<cmath>
 #include<algorithm>
-#include<stack>
 #include<queue>
-#include<vector>
 
 
 #if defined(_WIN32) || defined(WIN32) // win
@@ -75,6 +76,13 @@ struct Node
 	int num, val;   //存放结点编号和到初始点的距离 
 };
 
+//typedef int(*R)[6];
+struct myGraph
+{
+    int subDist[nodeNum][nodeNum]; // 记录图的两点间路径长度
+    int dist[nodeNum]; // 表示当前点到源点的最短路径长度
+    int prevN[nodeNum];     // 记录当前点的前一个结点
+};
 
 /*
 function:		实现dijkstra算法，包括从最小队列抽取最小点和松弛操作
@@ -85,7 +93,7 @@ parameter:
 	subDist[][]	--任意两节点间距
 return:			void
 */
-void Dijkstra(int beginNode, int *dist, int *prevN, int subDist[6][6])
+myGraph Dijkstra(int beginNode, myGraph myG)
 {
 	int tmp = 0; // 
 	int nextNode = 0;
@@ -103,12 +111,12 @@ void Dijkstra(int beginNode, int *dist, int *prevN, int subDist[6][6])
 		{
 			for (int j = 1; j < nodeNum; ++j)
 			{
-				tmpLen = dist[sSet[i]] + subDist[sSet[i]][j] < subDist[0][j] ? dist[sSet[i]] + subDist[sSet[i]][j] : subDist[0][j]; // 这个距离是取得全局最优的算法关键，证明见《算法导论》367页
+				tmpLen = myG.dist[sSet[i]] + myG.subDist[sSet[i]][j] < myG.subDist[0][j] ? myG.dist[sSet[i]] + myG.subDist[sSet[i]][j] : myG.subDist[0][j]; // 这个距离是取得全局最优的算法关键，证明见《算法导论》367页
 				if (tmpLen < tmp)
 				{
 					tmp = tmpLen;
 					nextNode = j;
-					prevN[nextNode] = sSet[i];
+					myG.prevN[nextNode] = sSet[i];
 				}
 			}
 		}
@@ -116,13 +124,14 @@ void Dijkstra(int beginNode, int *dist, int *prevN, int subDist[6][6])
 		// 将已在集合S内的点距源点距离改为最大值
 		for (int k = 0; k < nodeNum; ++k)
 		{
-			subDist[k][nextNode] = maxLen;
+			myG.subDist[k][nextNode] = maxLen;
 		}
 		ss++;
 		sSet[ss] = nextNode; // 将nextNode包含进集合S
 		// 取得源点到当前点的最小距离
-		dist[nextNode] = tmp;
+		myG.dist[nextNode] = tmp;
 	}
+    return myG;
 }
 
 /*
@@ -133,24 +142,24 @@ parameter:
 			uNode--目的节点
 return:		void
 */
-void searchPath(int *prevN, int vNode, int uNode)
+void searchPath(myGraph myG, int vNode, int uNode)
 {
-	int que[nodeNum]; // prevN是反向路径，这里倒一下是正向路径
+	int que[nodeNum - 1]; // prevN是反向路径，这里倒一下是正向路径
 	int id = uNode;
 	int i = 0;
 	while (id != vNode)
 	{
 		que[i] = id + 1;
 		i++;
-		id = prevN[id];
+		id = myG.prevN[id];
 	}
-	cout << id + 1 << " -> ";
+	cout << id + 1;
 
 	for (i; i > 1; --i)
 	{
-		cout << " -> " << que[i - 1] << " -> ";
+		cout << " -> " << que[i - 1];
 	}
-	cout << que[i - 1] << endl;
+	cout << " -> " << que[i - 1] << endl;
 	
 }
 
@@ -159,64 +168,15 @@ function:	邻接算法主函数
 parameter:	void
 return:		void
 */
-void matrixFun()
+void matrixFun(myGraph myG)
 {
-	int dist[nodeNum];     // 表示当前点到源点的最短路径长度
-	int prevN[nodeNum];     // 记录当前点的前一个结点
-	// 初始化subDist[][]为maxLen
-	int subDist[nodeNum][nodeNum]; // 记录图的两点间路径长度
-	for (int i = 0; i < nodeNum; ++i)
-	{
-		for (int j = 0; j < nodeNum; ++j)
-		{
-			subDist[i][j] = maxLen;
-			dist[j] = maxLen; // 在这里把dist向量赋值		
-		}
-	}
-	dist[0] = 0;
+	myG = Dijkstra(0, myG);
 
-	subDist[0][1] = 8;
-	subDist[0][2] = 3;
-	subDist[0][3] = 2;
-	subDist[1][3] = 1;
-	subDist[1][4] = 3;
-	subDist[2][3] = 5;
-	subDist[2][5] = 6;
-	subDist[3][4] = 2;
-	subDist[4][5] = 1;
-
-	subDist[1][0] = 8;
-	subDist[2][0] = 3;
-	subDist[3][0] = 2;
-	subDist[3][1] = 1;
-	subDist[4][1] = 3;
-	subDist[3][2] = 5;
-	subDist[5][2] = 6;
-	subDist[4][3] = 2;
-	subDist[5][4] = 1;
-
-	for (int i = 0; i < nodeNum; ++i)
-	{
-		for (int j = 0; j < nodeNum; ++j)
-		{
-			// cout << subDist[i][j];
-			printf("%8d", subDist[i][j]);
-		}
-		cout << endl;
-	}
-
-	Dijkstra(0, dist, prevN, subDist);
-
-	searchPath(prevN, 0, 1);
-	cout << dist[1] << endl;
-	searchPath(prevN, 0, 2);
-	cout << dist[2] << endl;
-	searchPath(prevN, 0, 3);
-	cout << dist[3] << endl;
-	searchPath(prevN, 0, 4);
-	cout << dist[4] << endl;
-	searchPath(prevN, 0, 5);
-	cout << dist[5] << endl;
+    for (int i = 1; i < nodeNum; ++i)
+    {
+        searchPath(myG, 0, i);
+        cout << myG.dist[i] << endl;
+    }
 }
 
 bool operator < (Node a, Node b)
@@ -228,64 +188,32 @@ bool operator < (Node a, Node b)
 	return a.val>b.val;              //先出小 
 }
 
-void minQ()
+void minQ(myGraph myG)
 {
 	priority_queue<Node> qq;;   //优先从小到大
-	int dis[100];     //到原点最短距离 
-	int D[100][100];  //记录路径长度
 	
-	Node nod[6];
+	Node nod[nodeNum - 1];
 	
 	while (!qq.empty())
 	{
 		qq.pop(); //清空
 	}
-	memset (D, -1, sizeof(D));
 
-	
-	D[1][2] = 8;
-	D[1][3] = 3;
-	D[1][4] = 2;
-	D[2][4] = 1;
-	D[2][5] = 3;
-	D[3][4] = 5;
-	D[3][6] = 6;
-	D[4][5] = 2;
-	D[5][6] = 1;
-
-	D[2][1] = 8;
-	D[3][1] = 3;
-	D[4][1] = 2;
-	D[4][2] = 1;
-	D[5][2] = 3;
-	D[4][3] = 5;
-	D[6][3] = 6;
-	D[5][4] = 2;
-	D[6][5] = 1;
-	
-	for (int i = 2; i <= nodeNum; i++)
-	{
-		dis[i] = maxLen;
-	}
-		
-	dis[1] = 0;
-	nod[0].num = 1;
+	nod[0].num = 0;
 	nod[0].val = 0;
 
 	qq.push (nod[0]);   //将起点放入队列 
 
 	while (!qq.empty())  //不为空时 
 	{
-
-		for (int i = 2; i <= nodeNum; ++i)
+		for (int i = 1; i < nodeNum; ++i)
 		{
-			int j = 1;
-			if (D[qq.top().num][i] != -1 && dis[i]>dis[qq.top().num] + D[qq.top().num][i])
+			int j = 0;
+			if (myG.subDist[qq.top().num][i] != -1 && myG.dist[i]>myG.dist[qq.top().num] + myG.subDist[qq.top().num][i])
 			{
-
-				dis[i] = dis[qq.top().num] + D[qq.top().num][i];
-				nod[j].num = i; nod[j].val = dis[i];
-				qq.push (nod[j]);
+                myG.dist[i] = myG.dist[qq.top().num] + myG.subDist[qq.top().num][i]; // 更新距源点距离
+				myG.prevN[j] = i; nod[j].val = myG.dist[i]; // 将信息保存在nod中
+				qq.push (nod[j]); // 放入优先队列
 			}
 			j++;
 		}
@@ -293,19 +221,59 @@ void minQ()
 		qq.pop();
 	}
 
-	for(int i = 2;i <= nodeNum;++i)
+/*	for(int i = 1; i < nodeNum; ++i)
 	{
-	cout<<"初始点到"<<i<<"点的距离为："<<dis[i]<<endl;
+	cout << "初始点到" << i + 1 << "点的距离为：" << myG.dist[i] << endl;
 	}
 	
-/*
+
 	for (int i = 2; i <= V; i++)
 	{
 		cout << nod[i].num << "->";
 	}
 	cout << endl;*/
+    for (int i = 1; i < nodeNum; ++i)
+    {
+        searchPath(myG, 0, i);
+        cout << myG.dist[i] << endl;
+    }
 }
 
+myGraph designGraph(myGraph myG)
+{
+    for (int i = 0; i < nodeNum; ++i)
+    {
+        for (int j = 0; j < nodeNum; ++j)
+        {
+            myG.subDist[i][j] = maxLen;
+            myG.dist[j] = maxLen; // 在这里把dist向量赋值
+        }
+    }
+
+	myG.subDist[0][1] = 8;
+    myG.subDist[0][2] = 3;
+    myG.subDist[0][3] = 2;
+    myG.subDist[1][3] = 1;
+    myG.subDist[1][4] = 3;
+    myG.subDist[2][3] = 5;
+    myG.subDist[2][5] = 6;
+    myG.subDist[3][4] = 2;
+    myG.subDist[4][5] = 1;
+
+    myG.subDist[1][0] = 8;
+    myG.subDist[2][0] = 3;
+    myG.subDist[3][0] = 2;
+    myG.subDist[3][1] = 1;
+    myG.subDist[4][1] = 3;
+    myG.subDist[3][2] = 5;
+    myG.subDist[5][2] = 6;
+    myG.subDist[4][3] = 2;
+    myG.subDist[5][4] = 1;
+
+    myG.dist[0] = 0;
+
+	return myG;
+}
 
 /*
 function:	测程序运行时间，支持win/Linux/Mac/openBSD等平台
@@ -314,6 +282,20 @@ return:		void
 */
 void test_time_start(void)
 {
+	myGraph myG = {0, 0, 0};
+	myG = designGraph(myG); // 记录图的信息
+	myGraph myG1 = {0, 0, 0 };
+	myG1 = designGraph(myG1); // 记录图的信息
+
+	for (int i = 0; i < nodeNum; ++i)
+	{
+		for (int j = 0; j < nodeNum; ++j)
+		{
+			printf("%8d", myG.subDist[i][j]);
+		}
+		cout << endl;
+	}
+
 #ifdef WINDOWS_IMPL
 	// QueryPerformanceCounter()
 	LARGE_INTEGER litmp;
@@ -326,7 +308,7 @@ void test_time_start(void)
 	
 	QueryPerformanceCounter(&litmp);
 	QPart1 = litmp.QuadPart;// 获得初始值
-	matrixFun();
+	matrixFun(myG);
 	QueryPerformanceCounter(&litmp);
 	QPart2 = litmp.QuadPart;//获得中止值
 	dfMinus = (double)(QPart2 - QPart1);
@@ -335,7 +317,8 @@ void test_time_start(void)
 
 	QueryPerformanceCounter(&litmp);
 	QPart1 = litmp.QuadPart;// 获得初始值
-	minQ();
+	
+	minQ(myG1);
 	QueryPerformanceCounter(&litmp);
 	QPart2 = litmp.QuadPart;//获得中止值
 	dfMinus = (double)(QPart2 - QPart1);
@@ -347,16 +330,16 @@ void test_time_start(void)
 	double timeuse;
 	
 	gettimeofday(&tpstart, NULL);
-	matrixFun();
+    matrixFun(myG);
 	gettimeofday(&tpend, NULL);
 	timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
 	cout << "用时" << timeuse << "us" << endl;
 
 	gettimeofday(&tpstart, NULL);
-	minQ();
-	gettimeofday(&tpend, NULL);
-	timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
-	cout << "用时" << timeuse << "us" << endl;
+    minQ(myG1);
+    gettimeofday(&tpend, NULL);
+    timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
+    cout << "用时" << timeuse << "us" << endl;
 #endif
 }
 
