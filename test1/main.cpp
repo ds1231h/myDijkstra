@@ -203,18 +203,21 @@ void minQ(myGraph myG)
 	nod[0].val = 0;
 
 	qq.push (nod[0]);   //将起点放入队列 
-
+	
 	while (!qq.empty())  //不为空时 
 	{
+		int j = 0;
 		for (int i = 1; i < nodeNum; ++i)
 		{
-			int j = 0;
 			if (myG.subDist[qq.top().num][i] != -1 && myG.dist[i]>myG.dist[qq.top().num] + myG.subDist[qq.top().num][i])
 			{
                 myG.dist[i] = myG.dist[qq.top().num] + myG.subDist[qq.top().num][i]; // 更新距源点距离
-				myG.prevN[j] = i; nod[j].val = myG.dist[i]; // 将信息保存在nod中
+				nod[j].num = i;
+				nod[j].val = myG.dist[i]; // 将信息保存在nod中
 				qq.push (nod[j]); // 放入优先队列
+				myG.prevN[i] = qq.top().num;
 			}
+			
 			j++;
 		}
 
