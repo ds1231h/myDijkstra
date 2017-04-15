@@ -5,7 +5,16 @@
 
 算法依据《算法导论》，以**邻接矩阵**实现。
 
-具体算法分析和可行性证明见我的博客：http://blog.csdn.net/ds1231h/article/details/70144370
+具体算法分析和可行性证明见我的博客：
+
+[1]半路算法之Dijkstra——以路由算法的角度进行理解:
+http://blog.csdn.net/ds1231h/article/details/70144370
+
+[2]dijkstra算法再整理:
+http://blog.csdn.net/ds1231h/article/details/70182462
+
+[3]半路算法之二项树与二项堆:
+http://blog.csdn.net/ds1231h/article/details/70187963
 
 程序中含有测时功能
 
