@@ -20,7 +20,7 @@ http://blog.csdn.net/ds1231h/article/details/70187963
 
 算法效率：
 linux(AMD A4-4300M APU, g++ 5.4.0)下以邻接矩阵实现时间为196us，STL的优先队列实现时间为221us。
-windows7(i7-4710MQ, g++ 5.3.0)下以邻接矩阵实现时间为3000us，STL的优先队列实现时间未测。
+windows7(i7-4710MQ, g++ 5.3.0)下以邻接矩阵实现时间为1525us，STL的优先队列实现时间为2765us。
 
 
 
