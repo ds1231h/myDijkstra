@@ -53,12 +53,20 @@
 // @version: 2.6
 // @data: 20170415
 
+// addition7
+// @subtitle: 重构7
+// @purpose: 从文件中input.txt中读写数据，并将数据保存到result.txt中
+// @author: MuPei
+// @version: 2.7
+// @data: 20170416
+
 #include <stdio.h>
 #include <iostream>
 #include <memory.h>
 #include <algorithm>
 #include <queue>
 #include <assert.h>
+#include <fstream>
 
 #if defined(_WIN32) || defined(WIN32) // win
 #define WINDOWS_IMPL
@@ -76,7 +84,7 @@
 using namespace std;
 
 const int nodeNum = 6;
-const int maxLen = 1000;
+const int maxLen = 999;
 
 struct Node
 {
@@ -88,6 +96,8 @@ struct myGraph
 	int subDist[nodeNum][nodeNum]; // 记录图的两点间路径长度
 	int dist[nodeNum]; // 表示当前点到源点的最短路径长度
 	int prevN[nodeNum];     // 记录当前点的前一个结点
+	int vNum;
+	int edgeNUm;
 };
 
 /*
@@ -100,8 +110,11 @@ struct myGraph
 * */
 void searchPath(myGraph myG, int vNode, int uNode)
 {
-	assert(sizeof(myG) != 0);
+	assert(sizeof(myG) > 1);
 	assert(vNode != uNode && vNode < nodeNum && uNode < nodeNum); // 按理说源节点和目的节点不能为同一个吧
+																  //    ofstream fout("result.txt");
+	ofstream fout;
+	fout.open("result.txt", ios::app);
 	int que[nodeNum - 1]; // prevN是反向路径，这里倒一下是正向路径
 	int id = uNode;
 	int i = 0;
@@ -112,13 +125,16 @@ void searchPath(myGraph myG, int vNode, int uNode)
 		id = myG.prevN[id];
 	}
 	cout << id + 1;
+	fout << id + 1;
 
 	for (i; i > 1; --i)
 	{
 		cout << " -> " << que[i - 1];
+		fout << " -> " << que[i - 1];
 	}
 	cout << " -> " << que[i - 1] << endl;
-
+	fout << " -> " << que[i - 1] << endl;
+	fout.close();
 }
 
 /*
@@ -128,12 +144,17 @@ void searchPath(myGraph myG, int vNode, int uNode)
 * */
 void showPath(myGraph myG)
 {
-	assert(sizeof(myG) != 0);
+	assert(sizeof(myG) > 1);
+	ofstream fout;
 	for (int i = 1; i < nodeNum; ++i)
 	{
 		searchPath(myG, 0, i);
 		cout << myG.dist[i] << endl;
+		fout.open("result.txt", ios::app);
+		fout << myG.dist[i] << endl;
+		fout.close();
 	}
+
 }
 
 /*
@@ -153,7 +174,7 @@ void matrixFun(myGraph myG, int beginNode)
 	memset(sSet, -1, sizeof(sSet));
 	assert(beginNode < nodeNum);
 	sSet[0] = beginNode;
-	assert(sizeof(myG) != 0);
+	assert(sizeof(myG) > 1);
 
 	while (ss != nodeNum - 1) // 循环nodeNum-1次即找到了nodeNum-1个节点的最短路径
 	{
@@ -219,7 +240,7 @@ void minQ(myGraph myG, int beginNode)
 	}
 
 	assert(beginNode < nodeNum);
-	assert(sizeof(myG) != 0);
+	assert(sizeof(myG) > 1);
 
 	// 对节点和优先队列赋初始节点的值
 	nod[beginNode].num = 0;
@@ -253,7 +274,7 @@ void minQ(myGraph myG, int beginNode)
 * */
 myGraph designGraph(myGraph myG, int beginNode)
 {
-	assert(sizeof(myG) != 0);
+	assert(sizeof(myG) > 1);
 	for (int i = 0; i < nodeNum; ++i)
 	{
 		for (int j = 0; j < nodeNum; ++j)
@@ -263,25 +284,22 @@ myGraph designGraph(myGraph myG, int beginNode)
 		}
 	}
 
-	myG.subDist[0][1] = 8;
-	myG.subDist[0][2] = 3;
-	myG.subDist[0][3] = 2;
-	myG.subDist[1][3] = 1;
-	myG.subDist[1][4] = 3;
-	myG.subDist[2][3] = 5;
-	myG.subDist[2][5] = 6;
-	myG.subDist[3][4] = 2;
-	myG.subDist[4][5] = 1;
+	ifstream fin("input.txt");
+	if (!fin)
+	{
+		cout << "Error opening input.txt for input" << endl;
+		exit(-1);
+	}
+	fin >> myG.vNum;
+	fin >> myG.edgeNUm;
+	int i, j;
+	for (int k = 0; k < myG.edgeNUm * 2; ++k)
+	{
+		fin >> i; fin >> j;
+		fin >> myG.subDist[i][j];
+	}
+	fin.close();
 
-	myG.subDist[1][0] = 8;
-	myG.subDist[2][0] = 3;
-	myG.subDist[3][0] = 2;
-	myG.subDist[3][1] = 1;
-	myG.subDist[4][1] = 3;
-	myG.subDist[3][2] = 5;
-	myG.subDist[5][2] = 6;
-	myG.subDist[4][3] = 2;
-	myG.subDist[5][4] = 1;
 	assert(beginNode < nodeNum);
 	myG.dist[beginNode] = 0;
 
@@ -320,6 +338,11 @@ void test_time_start(void)
 	QueryPerformanceFrequency(&litmp);
 	dfFreq = litmp.QuadPart;
 
+	ofstream fout;
+	fout.open("result.txt", ios::trunc);
+	fout << "以邻接矩阵实现：" << endl;
+	fout.close();
+
 	QueryPerformanceCounter(&litmp);
 	QPart1 = litmp.QuadPart;// 获得初始值
 	matrixFun(myG, 0);
@@ -328,32 +351,56 @@ void test_time_start(void)
 	dfMinus = (double)(QPart2 - QPart1);
 	dfTim = dfMinus / dfFreq * 1000000;// 获得对应的时间值，单位为秒
 	cout << "用时" << dfTim << "us" << endl;
+	fout.open("result.txt", ios::app);
+	fout << "用时" << dfTim << "us" << endl;
+	fout.close();
 
+	fout.open("result.txt", ios::app);
+	fout << "以最小优先队列实现：" << endl;
+	fout.close();
 	QueryPerformanceCounter(&litmp);
 	QPart1 = litmp.QuadPart;// 获得初始值
-
 	minQ(myG1, 0);
 	QueryPerformanceCounter(&litmp);
 	QPart2 = litmp.QuadPart;//获得中止值
 	dfMinus = (double)(QPart2 - QPart1);
 	dfTim = dfMinus / dfFreq * 1000000;// 获得对应的时间值，单位为秒
 	cout << "用时" << dfTim << "us" << endl;
+	fout.open("result.txt", ios::app);
+	fout << "用时" << dfTim << "us" << endl;
+	fout.close();
+
 #elif defined(LINUX_IMPL)
 	// gettimeofday()
 	struct timeval tpstart, tpend;
 	double timeuse;
 
-	gettimeofday(&tpstart, NULL);
-	matrixFun(myG, 1);
-	gettimeofday(&tpend, NULL);
-	timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
-	cout << "用时" << timeuse << "us" << endl;
+	ofstream fout;
+	fout.open("result.txt", ios::trunc);
+	fout << "以邻接矩阵实现：" << endl;
+	fout.close();
 
 	gettimeofday(&tpstart, NULL);
-	minQ(myG1, 1);
+	matrixFun(myG, 0);
 	gettimeofday(&tpend, NULL);
 	timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
 	cout << "用时" << timeuse << "us" << endl;
+	fout.open("result.txt", ios::app);
+	fout << "用时" << timeuse << "us" << endl;
+	fout.close();
+
+	fout.open("result.txt", ios::app);
+	fout << "以最小优先队列实现：" << endl;
+	fout.close();
+
+	gettimeofday(&tpstart, NULL);
+	minQ(myG1, 0);
+	gettimeofday(&tpend, NULL);
+	timeuse = 1000000 * (tpend.tv_sec - tpstart.tv_sec) + tpend.tv_usec - tpstart.tv_usec;//注意，秒的读数和微秒的读数都应计算在内
+	cout << "用时" << timeuse << "us" << endl;
+	fout.open("result.txt", ios::app);
+	fout << "用时" << timeuse << "us" << endl;
+	fout.close();
 #endif
 }
 
